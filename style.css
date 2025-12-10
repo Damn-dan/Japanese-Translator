@@ -1,52 +1,36 @@
-.app {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-.app {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background: #020617;
-}
-
-/* 强制所有容器宽度铺满屏幕 */
-* {
-  box-sizing: border-box;
-  max-width: 100% !important;
-}
-
+/* ===== 全局基础：手机优先铺满屏幕 ===== */
 * {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  width: 100%;
+  height: 100%;
   background: #020617;
   color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  overflow-x: hidden;
 }
 
-/* 整个应用区域：撑满整个屏幕高度，手机端不会左右留大空白 */
+/* ===== 主体容器 ===== */
 .app {
-  width: 100vw !important;
-  height: 100vh !important;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  width: 100%;
+  min-height: 100vh;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 8px 80px; /* 底部留出空间给固定输入框 */
+  display: flex;
+  flex-direction: column;
 }
 
 /* 顶部标题区域 */
 .app-header {
   text-align: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .app-header h1 {
@@ -60,23 +44,22 @@ body {
   color: #9ca3af;
 }
 
-/* 聊天滚动区域：占据中间所有空间，只让这里滚动 */
+/* ===== 聊天区域：中间部分可滚动 ===== */
 .chat-container {
   flex: 1;
   background: #020617;
   border-radius: 12px;
   padding: 8px;
-  overflow-y: auto;
-  margin-bottom: 6px;
   border: 1px solid #1f2937;
+  overflow-y: auto;
 }
 
 /* 每一组对话（句子 + 拆解） */
 .exchange {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-/* 聊天气泡通用样式 */
+/* ===== 气泡样式 ===== */
 .message-row {
   display: flex;
   margin-bottom: 6px;
@@ -91,7 +74,7 @@ body {
 }
 
 .bubble {
-  max-width: 78%;
+  max-width: 80%;
   padding: 8px 10px;
   border-radius: 12px;
   font-size: 14px;
@@ -102,7 +85,7 @@ body {
 
 .user .bubble {
   background: #2563eb;
-  color: white;
+  color: #ffffff;
   border-bottom-right-radius: 2px;
 }
 
@@ -113,7 +96,7 @@ body {
   border: 1px solid #1f2937;
 }
 
-/* 翻译气泡中的操作区域：朗读 + 复制 */
+/* 翻译气泡中的操作区：朗读 + 复制 */
 .translation-tools {
   display: flex;
   gap: 8px;
@@ -130,7 +113,7 @@ body {
   border-radius: 999px;
 }
 
-/* 句子拆解块：跟在本句译文后面 */
+/* ===== 句子拆解块：跟在对应译文下面 ===== */
 .analysis-block {
   margin-top: 4px;
   padding: 6px 8px;
@@ -161,13 +144,22 @@ body {
   margin: 4px 0;
 }
 
-/* 底部输入区域：固定在屏幕底部 */
+/* ===== 固定在底部的输入区域 ===== */
 .input-area {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(8px + env(safe-area-inset-left, 0px));
+  padding-right: calc(8px + env(safe-area-inset-right, 0px));
+  background: rgba(2, 6, 23, 0.98);
+  border-top: 1px solid #1f2937;
   display: flex;
   gap: 8px;
-  padding: 6px 8px;
-  border-top: 1px solid #1f2937;
-  background: #020617;
+  align-items: center;
+  z-index: 10;
 }
 
 .input-area input {
@@ -189,13 +181,13 @@ body {
   color: #022c22;
 }
 
-/* 手机适配，再稍微放宽气泡宽度 */
+/* ===== 手机端微调 ===== */
 @media (max-width: 600px) {
   .bubble {
     max-width: 90%;
   }
 
   .app {
-    padding: 6px;
+    padding: 6px 6px 80px;
   }
 }

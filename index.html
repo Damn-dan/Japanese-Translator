@@ -2,34 +2,38 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 手机端适配，铺满屏幕 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>Japanese Translate Chat</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <!-- 主体区域：标题 + 聊天内容 -->
     <div class="app">
       <header class="app-header">
         <h1>Japanese Translate Chat</h1>
         <p>输入中文，一起来学日语～</p>
       </header>
 
-      <!-- 聊天 + 拆解列表：可滚动 -->
+      <!-- 聊天记录：每一句 = 中文 + 日文 + 拆解 -->
       <main class="chat-container" id="chat-container">
-        <!-- 每次对话会插入一组：
-             用户消息 + 日文译文 + 对应的拆解块 -->
+        <!-- 通过 script.js 动态插入 .exchange -->
       </main>
-
-      <!-- 固定在底部的输入框 -->
-      <form id="input-form" class="input-area">
-        <input
-          type="text"
-          id="user-input"
-          placeholder="在这里输入中文单词或句子，例如：我今天去日本买书。"
-          autocomplete="off"
-        />
-        <button type="submit">发送</button>
-      </form>
     </div>
+
+    <!-- 固定在页面最下方的输入框 -->
+    <form id="input-form" class="input-area">
+      <input
+        type="text"
+        id="user-input"
+        placeholder="输入中文单词或句子，例如：我今天去日本买书。"
+        autocomplete="off"
+      />
+      <button type="submit">发送</button>
+    </form>
 
     <script src="script.js"></script>
   </body>

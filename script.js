@@ -1,182 +1,97 @@
-const chatContainer = document.getElementById("chat-container");
-const form = document.getElementById("input-form");
-const userInput = document.getElementById("user-input");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import OpenAI from "openai";
 
-// 提交事件：每次输入一句中文，生成一整组 exchange
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const text = userInput.value.trim();
-  if (!text) return;
+dotenv.config();
 
-  // 创建一个对话组容器：包含中文 + 日文 + 拆解
-  const exchange = document.createElement("div");
-  exchange.className = "exchange";
-  chatContainer.appendChild(exchange);
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  // 1. 用户中文气泡
-  addMessageBubble(text, "user", exchange);
-
-  // 2. 先插入“翻译中”的日文气泡
-  const loadingId = addMessageBubble("翻译中，请稍候…", "bot", exchange);
-
-  // 清空输入框
-  userInput.value = "";
-  scrollToBottom();
-
-  try {
-    // TODO：未来这里接 OpenAI / 其他真实翻译 + 语法 API
-    const result = await fakeTranslateAndExplain(text);
-
-    // 3. 更新日文气泡为真正的日文译文，并附加“朗读 + 复制”按钮
-    updateBotBubble(loadingId, result.japanese);
-
-    // 4. 在这一组 exchange 下，渲染对应的拆解
-    renderExchangeAnalysis(exchange, result);
-  } catch (error) {
-    console.error(error);
-    updateBotBubble(loadingId, "翻译失败，请稍后重试。");
-  }
-
-  scrollToBottom();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-// 新增一个气泡
-function addMessageBubble(text, role, parent) {
-  const row = document.createElement("div");
-  row.className = `message-row ${role}`;
+// 一个工具函数：让 OpenAI 同时返回“日文翻译 + 分词 + 语法解释”
+async function translateAndExplain(chineseText) {
+  const prompt = `
+你是一个专业的日语老师，请针对下面的中文句子，输出如下结构的 JSON：
 
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = text;
+1. japanese：整体翻译成自然、地道的日语。
+2. words：把日语句子拆成若干词或短语，每个词包含：
+   - jp：日语写法
+   - romaji：罗马音
+   - meaning：中文意思（简明）
+   - grammar：语法说明（词性、用法等）
+3. grammarSummary：对整句语法结构做一个简短说明。
 
-  let id = null;
-  if (role === "bot") {
-    id = `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    bubble.dataset.id = id;
-  }
-
-  row.appendChild(bubble);
-  (parent || chatContainer).appendChild(row);
-  return id;
-}
-
-// 更新 bot 气泡内容，并加入朗读 + 复制按钮
-function updateBotBubble(id, japaneseText) {
-  const bubble = chatContainer.querySelector(`.bubble[data-id="${id}"]`);
-  if (!bubble) return;
-
-  bubble.textContent = japaneseText;
-
-  const tools = document.createElement("div");
-  tools.className = "translation-tools";
-
-  // 朗读按钮
-  const speakBtn = document.createElement("button");
-  speakBtn.className = "tool-button";
-  speakBtn.textContent = "🔊 朗读";
-  speakBtn.addEventListener("click", () => {
-    speakJapanese(japaneseText);
-  });
-
-  // 复制按钮
-  const copyBtn = document.createElement("button");
-  copyBtn.className = "tool-button";
-  copyBtn.textContent = "📋 复制";
-  copyBtn.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(japaneseText);
-      copyBtn.textContent = "✅ 已复制";
-      setTimeout(() => {
-        copyBtn.textContent = "📋 复制";
-      }, 1500);
-    } catch (e) {
-      alert("复制失败，请手动选择文本复制。");
+要求：
+- 只输出 JSON，不要多余文字。
+- JSON 结构示例：
+{
+  "japanese": "今日は日本へ行きます。",
+  "words": [
+    {
+      "jp": "今日",
+      "romaji": "きょう",
+      "meaning": "今天",
+      "grammar": "时间名词，表示今天"
     }
-  });
-
-  tools.appendChild(speakBtn);
-  tools.appendChild(copyBtn);
-
-  bubble.appendChild(document.createElement("br"));
-  bubble.appendChild(tools);
+  ],
+  "grammarSummary": "解释整句语法结构……"
 }
 
-// 使用浏览器自带语音合成朗读日语
-function speakJapanese(text) {
-  if (!window.speechSynthesis) {
-    alert("当前浏览器不支持语音朗读功能。");
-    return;
+下面是中文句子：
+${chineseText}
+`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [
+      {
+        role: "system",
+        content: "You are an expert Japanese teacher and translator."
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    temperature: 0.3
+  });
+
+  const content = response.choices[0].message.content;
+
+  // 尝试解析为 JSON
+  try {
+    const jsonStart = content.indexOf("{");
+    const jsonEnd = content.lastIndexOf("}");
+    const jsonText = content.slice(jsonStart, jsonEnd + 1);
+    return JSON.parse(jsonText);
+  } catch (e) {
+    console.error("解析 JSON 失败：", e, content);
+    throw new Error("解析 AI 返回结果失败");
   }
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "ja-JP";
-  speechSynthesis.speak(utterance);
 }
 
-// 模拟翻译 & 拆解函数：以后换成真实 API
-async function fakeTranslateAndExplain(chineseText) {
-  // 真实情况下：这里应该是 fetch 后端接口
-  const japanese = `【假翻译】${chineseText} 的日文（以后接入真实 API）`;
-
-  // 临时示例拆解
-  const words = [
-    {
-      jp: "私",
-      romaji: "わたし",
-      meaning: "我",
-      grammar: "名词，第一人称"
-    },
-    {
-      jp: "今日",
-      romaji: "きょう",
-      meaning: "今天",
-      grammar: "时间名词"
-    },
-    {
-      jp: "日本へ",
-      romaji: "にほん へ",
-      meaning: "去日本",
-      grammar: "助词 へ 表示方向"
+// 对外暴露一个接口：/api/translate
+app.post("/api/translate", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== "string") {
+      return res.status(400).json({ error: "缺少 text 字段" });
     }
-  ];
 
-  const grammarSummary =
-    "这里将来会根据整句自动分析语法结构，例如：主语 + 时间 + 方向 + 动词 等等。";
+    const result = await translateAndExplain(text);
+    res.json(result);
+  } catch (error) {
+    console.error("翻译接口出错：", error);
+    res.status(500).json({ error: "翻译失败" });
+  }
+});
 
-  return {
-    japanese,
-    words,
-    grammarSummary
-  };
-}
-
-// 在当前对话组下渲染拆解
-function renderExchangeAnalysis(exchange, result) {
-  const block = document.createElement("div");
-  block.className = "analysis-block";
-
-  const title = document.createElement("p");
-  title.className = "analysis-block-title";
-  title.textContent = "句子拆解 · 词汇 & 语法";
-  block.appendChild(title);
-
-  result.words.forEach((w) => {
-    const div = document.createElement("div");
-    div.className = "word-item";
-    div.innerHTML = `
-      <strong>${w.jp}</strong>（${w.romaji}） · 意思：${w.meaning}<br />
-      语法：${w.grammar}
-    `;
-    block.appendChild(div);
-  });
-
-  const g = document.createElement("p");
-  g.textContent = result.grammarSummary;
-  block.appendChild(g);
-
-  exchange.appendChild(block);
-}
-
-// 始终滚动到最底部
-function scrollToBottom() {
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Japanese backend listening on port ${port}`);
+});

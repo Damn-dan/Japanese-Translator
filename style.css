@@ -5,50 +5,60 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0f172a;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #020617;
   color: #e5e7eb;
 }
 
+/* 整个应用区域：撑满整个屏幕高度，手机端不会左右留大空白 */
 .app {
-  max-width: 800px;
-  margin: 0 auto;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh; /* 视口高度 */
+  max-width: 100%;
+  margin: 0;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  padding: 16px;
 }
 
+/* 顶部标题区域 */
 .app-header {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .app-header h1 {
   margin: 0 0 4px 0;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .app-header p {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   color: #9ca3af;
 }
 
+/* 聊天滚动区域：占据中间所有空间，只让这里滚动 */
 .chat-container {
   flex: 1;
   background: #020617;
   border-radius: 12px;
-  padding: 12px;
+  padding: 8px;
   overflow-y: auto;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   border: 1px solid #1f2937;
+}
+
+/* 每一组对话（句子 + 拆解） */
+.exchange {
+  margin-bottom: 10px;
 }
 
 /* 聊天气泡通用样式 */
 .message-row {
   display: flex;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .message-row.user {
@@ -60,7 +70,7 @@ body {
 }
 
 .bubble {
-  max-width: 70%;
+  max-width: 78%;
   padding: 8px 10px;
   border-radius: 12px;
   font-size: 14px;
@@ -82,7 +92,7 @@ body {
   border: 1px solid #1f2937;
 }
 
-/* 翻译气泡中的操作区域 */
+/* 翻译气泡中的操作区域：朗读 + 复制 */
 .translation-tools {
   display: flex;
   gap: 8px;
@@ -99,23 +109,20 @@ body {
   border-radius: 999px;
 }
 
-/* 解析区域 */
-.analysis {
+/* 句子拆解块：跟在本句译文后面 */
+.analysis-block {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
   background: #020617;
-  border-radius: 12px;
-  padding: 10px;
   border: 1px solid #1f2937;
-  margin-bottom: 10px;
+  font-size: 12px;
 }
 
-.analysis h2 {
-  margin: 0 0 6px 0;
-  font-size: 16px;
-}
-
-#analysis-content p {
-  margin: 4px 0;
-  font-size: 13px;
+.analysis-block-title {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .word-item {
@@ -129,10 +136,17 @@ body {
   color: #93c5fd;
 }
 
-/* 输入区域 */
+.analysis-block p {
+  margin: 4px 0;
+}
+
+/* 底部输入区域：固定在屏幕底部 */
 .input-area {
   display: flex;
   gap: 8px;
+  padding: 6px 8px;
+  border-top: 1px solid #1f2937;
+  background: #020617;
 }
 
 .input-area input {
@@ -147,16 +161,20 @@ body {
 .input-area button {
   border: none;
   border-radius: 999px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   font-size: 14px;
   cursor: pointer;
   background: #22c55e;
   color: #022c22;
 }
 
-/* 手机适配 */
+/* 手机适配，再稍微放宽气泡宽度 */
 @media (max-width: 600px) {
   .bubble {
-    max-width: 85%;
+    max-width: 90%;
+  }
+
+  .app {
+    padding: 6px;
   }
 }

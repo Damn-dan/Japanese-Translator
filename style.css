@@ -37,12 +37,10 @@ body {
 
 /* 整个应用区域：撑满整个屏幕高度，手机端不会左右留大空白 */
 .app {
-  width: 100vw;  /* 强制占满整个可视宽度 */
-  height: 100vh;
-  margin: 0;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
+  width: 100vw !important;
+  height: 100vh !important;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* 顶部标题区域 */

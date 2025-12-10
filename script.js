@@ -2,36 +2,35 @@ const chatContainer = document.getElementById("chat-container");
 const form = document.getElementById("input-form");
 const userInput = document.getElementById("user-input");
 
-// 监听表单提交
+// 提交事件：每次输入一句中文，生成一整组 exchange
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = userInput.value.trim();
   if (!text) return;
 
-  // 创建一组 exchange：包含该句的用户气泡 + 译文 + 拆解
+  // 创建一个对话组容器：包含中文 + 日文 + 拆解
   const exchange = document.createElement("div");
   exchange.className = "exchange";
   chatContainer.appendChild(exchange);
 
-  // 显示用户气泡
+  // 1. 用户中文气泡
   addMessageBubble(text, "user", exchange);
 
-  // 显示“翻译中…”的 bot 气泡
+  // 2. 先插入“翻译中”的日文气泡
   const loadingId = addMessageBubble("翻译中，请稍候…", "bot", exchange);
 
   // 清空输入框
   userInput.value = "";
-
   scrollToBottom();
 
   try {
-    // TODO：未来这里接入真正的翻译 + 语法解析 API
+    // TODO：未来这里接 OpenAI / 其他真实翻译 + 语法 API
     const result = await fakeTranslateAndExplain(text);
 
-    // 更新 bot 气泡内容为日文译文，并添加工具按钮
+    // 3. 更新日文气泡为真正的日文译文，并附加“朗读 + 复制”按钮
     updateBotBubble(loadingId, result.japanese);
 
-    // 在这一组 exchange 下渲染对应的拆解
+    // 4. 在这一组 exchange 下，渲染对应的拆解
     renderExchangeAnalysis(exchange, result);
   } catch (error) {
     console.error(error);
@@ -41,7 +40,7 @@ form.addEventListener("submit", async (event) => {
   scrollToBottom();
 });
 
-// 添加气泡（支持指定父容器）
+// 新增一个气泡
 function addMessageBubble(text, role, parent) {
   const row = document.createElement("div");
   row.className = `message-row ${role}`;
@@ -61,19 +60,17 @@ function addMessageBubble(text, role, parent) {
   return id;
 }
 
-// 更新 bot 气泡：文字 + 工具按钮（🔊 + 复制）
+// 更新 bot 气泡内容，并加入朗读 + 复制按钮
 function updateBotBubble(id, japaneseText) {
   const bubble = chatContainer.querySelector(`.bubble[data-id="${id}"]`);
   if (!bubble) return;
 
-  // 先设置文本
   bubble.textContent = japaneseText;
 
-  // 工具按钮容器
   const tools = document.createElement("div");
   tools.className = "translation-tools";
 
-  // 播放按钮
+  // 朗读按钮
   const speakBtn = document.createElement("button");
   speakBtn.className = "tool-button";
   speakBtn.textContent = "🔊 朗读";
@@ -115,12 +112,12 @@ function speakJapanese(text) {
   speechSynthesis.speak(utterance);
 }
 
-// 模拟翻译 & 解析函数：先用假数据占位，之后接 OpenAI / 其他 API
+// 模拟翻译 & 拆解函数：以后换成真实 API
 async function fakeTranslateAndExplain(chineseText) {
-  // 真实情况应该是调用后端 API，这里先假装一下
+  // 真实情况下：这里应该是 fetch 后端接口
   const japanese = `【假翻译】${chineseText} 的日文（以后接入真实 API）`;
 
-  // 伪造拆解内容
+  // 临时示例拆解
   const words = [
     {
       jp: "私",
@@ -152,7 +149,7 @@ async function fakeTranslateAndExplain(chineseText) {
   };
 }
 
-// 在当前这一组（exchange）下渲染拆解
+// 在当前对话组下渲染拆解
 function renderExchangeAnalysis(exchange, result) {
   const block = document.createElement("div");
   block.className = "analysis-block";
@@ -179,7 +176,7 @@ function renderExchangeAnalysis(exchange, result) {
   exchange.appendChild(block);
 }
 
-// 滚动到底部
+// 始终滚动到最底部
 function scrollToBottom() {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
